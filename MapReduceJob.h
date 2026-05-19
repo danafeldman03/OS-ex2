@@ -2,6 +2,10 @@
 #define MAP_REDUCE_JOB_H
 
 #include "MapReduceClient.h"
+#include "MapContext.h"
+#include "ReduceContext.h"
+#include <barrier>
+#include <atomic>
 // you can add other includes here
 
 enum MapReduceStage
@@ -52,6 +56,26 @@ private:
 	/*
 		You can change everything on this part (these are just recommendations)
 	*/
+	const MapReduceClient &client;
+	const InputVec& inputVec;
+	OutputVec outputVec;
+	int multiThreadLevel;
+	std::barrier<> barrier;
+	std::mutex outputMutex;
+	std::atomic<uint32_t> nextInputIndex;
+	std::atomic<uint64_t> jobState; // 2 bits-stage, 31 bits-total to process, 31 bits-processed 
+	
+
+	//std::vector<ThreadContext> threadContexts;
+	std::vector<std::thread> threads;
 };
 	
+/*
+struct ThreadContext
+{
+	int threadId;
+	class MapReduceJob *job;
+	MapContext mapContext;
+};
+*/
 #endif // MAP_REDUCE_JOB_H
