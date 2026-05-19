@@ -10,8 +10,10 @@ MapReduceJob::MapReduceJob(const MapReduceClient &client, const InputVec &inputV
 : client(client), inputVec(inputVec), multiThreadLevel(multiThreadLevel), barrier(multiThreadLevel), nextInputIndex(0), jobState(0)
 {
     // TODO: implement this constructor
-    //for each 0-multithreadLevel, create a thread for it, and start it.
+    //for each 0-multithreadLevel, create a thread for it and start it, add it to the threads vector and context
 }
+
+//void MapReduceJob::worker(threadContext *thread_context){}?
 
 MapReduceState MapReduceJob::getState(void) const
 {
