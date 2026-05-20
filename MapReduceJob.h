@@ -6,6 +6,9 @@
 #include "ReduceContext.h"
 #include <barrier>
 #include <atomic>
+#include <thread>
+#include <vector>
+#include <algorithm>
 // you can add other includes here
 
 enum MapReduceStage
@@ -58,24 +61,22 @@ private:
 	*/
 	const MapReduceClient &client;
 	const InputVec& inputVec;
-	OutputVec outputVec;
 	int multiThreadLevel;
-	std::barrier<> barrier;
-	std::mutex outputMutex;
-	std::atomic<uint32_t> nextInputIndex;
-	std::atomic<uint64_t> jobState; // 2 bits-stage, 31 bits-total to process, 31 bits-processed 
-	
-
-	//std::vector<ThreadContext> threadContexts;
+	std::vector<MapContext> mapContexts;
 	std::vector<std::thread> threads;
+	std::atomic<uint64_t> mapInputIndex;
+	std::atomic<uint64_t> jobState; // 2 bits-stage, 31 bits-total to process, 31 bits-processed 
+	std::barrier<>* barrier;
+	OutputVec outputVec;
+
+	void setStage(MapReduceStage stage, uint64_t totalToProcess);
+	static void threadRun(MapReduceJob *job, int threadId);
+	void runMap(int threadId);
+	void runSort(int threadId);
+	void runShuffle();
+	void runReduce(int threadId);
+	void incInputIndex(int inc);
+
 };
 	
-/*
-struct ThreadContext
-{
-	int threadId;
-	class MapReduceJob *job;
-	MapContext mapContext;
-};
-*/
 #endif // MAP_REDUCE_JOB_H
