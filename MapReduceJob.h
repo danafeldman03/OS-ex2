@@ -64,7 +64,7 @@ private:
 	int multiThreadLevel;
 	std::vector<MapContext> mapContexts;
 	std::vector<std::thread> threads;
-	std::atomic<uint64_t> mapInputIndex;
+	std::atomic<uint64_t> mapInputIndex=-1;
 	std::atomic<uint64_t> jobState; // 2 bits-stage, 31 bits-total to process, 31 bits-processed 
 	std::barrier<>* barrier;
 	OutputVec outputVec;
@@ -75,7 +75,7 @@ private:
 	void runSort(int threadId);
 	void runShuffle();
 	void runReduce(int threadId);
-	void incInputIndex(int inc);
+	void incProcessed(int inc);
 
 };
 	

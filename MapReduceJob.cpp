@@ -19,7 +19,8 @@ void MapReduceJob::setStage(MapReduceStage stage, uint64_t totalToProcess)
     jobState.store(((uint64_t)(stage & STAGE_MASK) << STAGE_SHIFT)|((uint64_t)(totalToProcess & TOTAL_MASK) << TOTAL_SHIFT));
 }
 
-void MapReduceJob::incInputIndex(int inc)
+//this funciton might be unnecassary, maybe we sould delete it and simply use jobState.fetch_add(inc) every time
+void MapReduceJob::incProcessed(int inc)
 {
     jobState.fetch_add(inc);
 }
@@ -54,7 +55,7 @@ void MapReduceJob::runMap(int threadId)
             break;
         }
         client.map(inputVec[idx].first, inputVec[idx].second, mapContexts[threadId]);
-        incInputIndex(1);
+        incProcessed(1);
     }
 }
 
@@ -110,8 +111,8 @@ OutputVec MapReduceJob::getOutput(void)
 bool MapReduceJob::isDone(void) const
 {
     uint64_t val = jobState.load();
-    uint64_t stage     = (val >> STAGE_SHIFT) & STAGE_MASK;
-    uint64_t total     = (val >> TOTAL_SHIFT) & TOTAL_MASK;
+    uint64_t stage = (val >> STAGE_SHIFT) & STAGE_MASK;
+    uint64_t total = (val >> TOTAL_SHIFT) & TOTAL_MASK;
     uint64_t processed = val & PROCESSED_MASK;
 
     // Done = in reduce stage and all pairs processed
@@ -120,5 +121,13 @@ bool MapReduceJob::isDone(void) const
 
 MapReduceJob::~MapReduceJob()
 {
-    // TODO: implement this destructor
+    //might want to move the loop to wait() function
+    for (std::thread &t : threads)
+    {
+        if (t.joinable())
+        {
+            t.join();
+        }
+    }
+    delete barrier;
 }
