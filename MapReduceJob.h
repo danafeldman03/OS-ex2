@@ -67,6 +67,7 @@ private:
 	std::atomic<uint64_t> mapInputIndex;
 	std::atomic<uint64_t> jobState; // 2 bits-stage, 31 bits-total to process, 31 bits-processed 
 	std::barrier<>* barrier;
+	std::mutex waitMutex;
 	OutputVec outputVec;
 
 	void setStage(MapReduceStage stage, uint64_t totalToProcess);
@@ -76,6 +77,7 @@ private:
 	void runShuffle();
 	void runReduce(int threadId);
 	void incProcessed(int inc);
+
 
 };
 	

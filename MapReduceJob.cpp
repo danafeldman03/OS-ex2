@@ -36,6 +36,7 @@ void MapReduceJob::threadRun(MapReduceJob *job, int threadId)
     /*
     if(threadId == 0)
     {
+        setStage(SHUFFLE_STAGE, totalToProcess); // totalToProcess should be the total number of intermediate pairs to process in the reduce stage
         job->runShuffle();
     }
     else{
@@ -49,6 +50,7 @@ void MapReduceJob::threadRun(MapReduceJob *job, int threadId)
 void MapReduceJob::runMap(int threadId)
 {
     while(true){
+        //fetch_add returns the value before the addition, so we can use it as an index to process
         uint64_t idx = mapInputIndex.fetch_add(1);
         if(idx >= inputVec.size())
         {
@@ -81,6 +83,7 @@ MapReduceJob::MapReduceJob(const MapReduceClient &client, const InputVec &inputV
     barrier = new std::barrier<>(multiThreadLevel);
     setStage(MAP_STAGE, inputVec.size());
     threads.reserve(multiThreadLevel);
+    mapContexts.resize(multiThreadLevel);
     for(int i = 0; i < multiThreadLevel; ++i)
     {
         threads.emplace_back(threadRun, this, i);
@@ -100,13 +103,23 @@ MapReduceState MapReduceJob::getState(void) const
 
 void MapReduceJob::wait(void)
 {
-    // TODO: implement this function
+    //NOT THREAD SAFE YET - if called from multiple threads, might cause issuesq
+    //need to add mutex
+    //std::lock_guard<std::mutex> lock(waitMutex);
+    for (std::thread &t : threads)
+    {
+        if (t.joinable())
+        {
+            t.join();
+        }
+    }
 }
 
 OutputVec MapReduceJob::getOutput(void)
 {
     // TODO: implement this function
 }
+
 
 bool MapReduceJob::isDone(void) const
 {
@@ -121,13 +134,6 @@ bool MapReduceJob::isDone(void) const
 
 MapReduceJob::~MapReduceJob()
 {
-    //might want to move the loop to wait() function
-    for (std::thread &t : threads)
-    {
-        if (t.joinable())
-        {
-            t.join();
-        }
-    }
+    wait();
     delete barrier;
 }
