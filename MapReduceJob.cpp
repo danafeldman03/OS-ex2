@@ -103,9 +103,7 @@ MapReduceState MapReduceJob::getState(void) const
 
 void MapReduceJob::wait(void)
 {
-    //NOT THREAD SAFE YET - if called from multiple threads, might cause issuesq
-    //need to add mutex
-    //std::lock_guard<std::mutex> lock(waitMutex);
+    std::lock_guard<std::mutex> lock(waitMutex);
     for (std::thread &t : threads)
     {
         if (t.joinable())
