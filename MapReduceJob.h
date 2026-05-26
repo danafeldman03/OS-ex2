@@ -70,6 +70,7 @@ private:
 	std::mutex waitMutex;
 
 	std::mutex reduceMutex;
+	std::mutex outputMutex; //(?)
 	std::atomic<uint64_t> reduceInputIndex{0};
 	OutputVec outputVec;
 	ReduceContext reduceContext;

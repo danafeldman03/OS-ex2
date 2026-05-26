@@ -15,7 +15,7 @@ static const uint64_t TOTAL_SHIFT = 31;
 //-------private functions implementations-------
 void MapReduceJob::setStage(MapReduceStage stage, uint64_t totalToProcess)
 {
-    jobState.store(((uint64_t)(stage & STAGE_MASK) << STAGE_SHIFT)|((uint64_t)(totalToProcess & TOTAL_MASK) << TOTAL_SHIFT));
+    jobState.store(((uint64_t)(stage & STAGE_MASK) << STAGE_SHIFT)|((uint64_t)(totalToProcess & TOTAL_MASK) << TOTAL_SHIFT)| 0Ull);
 }
 
 //this funciton might be unnecassary, maybe we sould delete it and simply use jobState.fetch_add(inc) every time
@@ -152,14 +152,16 @@ MapReduceState MapReduceJob::getState(void) const
     uint64_t stage = (val >> STAGE_SHIFT) & STAGE_MASK;
     uint64_t total = (val >> TOTAL_SHIFT) & TOTAL_MASK;
     uint64_t processed = val & PROCESSED_MASK;
-
+    
+    if(total == 0){
+        return {MapReduceState((MapReduceStage)stage, 100.0)};
+    }
     return {MapReduceState((MapReduceStage)stage, 100.0 * (double)processed / (double)total)};
 }
 
 void MapReduceJob::wait(void)
 {
     //each thread could only be called joined once, it is protected by the joinable.
-    //merge check
     std::lock_guard<std::mutex> lock(waitMutex);
     for (std::thread &t : threads)
     {
@@ -175,6 +177,8 @@ OutputVec MapReduceJob::getOutput(void)
     if (!isDone()){
         wait();
     }
+    // TODO: add mutex to protect outputVec(?)
+    std::lock_guard<std::mutex> lock(outputMutex);
     std::sort(outputVec.begin(), outputVec.end(),
         [](const OutputPair &a, const OutputPair &b){
             return *(a.first) < *(b.first);
@@ -192,6 +196,9 @@ bool MapReduceJob::isDone(void) const
     uint64_t processed = val & PROCESSED_MASK;
 
     // Done = in reduce stage and all pairs processed
+    if(total == 0){
+        return stage == REDUCE_STAGE;
+    }
     return (stage == REDUCE_STAGE) && (processed >= total);
 }
 

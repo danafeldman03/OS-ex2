@@ -1,4 +1,9 @@
 #include "MapReduceJob.h"
+#include "MapReduceJob.cpp"
+#include "MapContext.h"
+#include "MapContext.cpp"
+#include "ReduceContext.h"
+#include "ReduceContext.cpp"
 #include <iostream>
 #include <sstream>
 #include <string>

@@ -5,8 +5,11 @@
 #include <algorithm>
 #include "MapReduceClient.h"
 #include "MapReduceJob.h"
+#include "MapReduceJob.cpp"
 #include "MapContext.h"
+#include "MapContext.cpp"
 #include "ReduceContext.h"
+#include "ReduceContext.cpp"
 
 unsigned int unique_keys = 100;
 

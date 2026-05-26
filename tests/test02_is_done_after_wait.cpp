@@ -1,4 +1,9 @@
 #include "MapReduceJob.h"
+#include "MapReduceJob.cpp"
+#include "MapContext.h"
+#include "MapContext.cpp"
+#include "ReduceContext.h"
+#include "ReduceContext.cpp"
 #include <iostream>
 
 class IntElement : public K1, public K2, public K3, public V1, public V2, public V3
