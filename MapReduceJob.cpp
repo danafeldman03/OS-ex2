@@ -158,6 +158,7 @@ MapReduceState MapReduceJob::getState(void) const
 
 void MapReduceJob::wait(void)
 {
+    //each thread could only be called joined once, it is protected by the joinable.
     std::lock_guard<std::mutex> lock(waitMutex);
     for (std::thread &t : threads)
     {
